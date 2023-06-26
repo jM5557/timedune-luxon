@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id             Int             @id @default(autoincrement())
+  name           String?
+  email          String?         @unique
+  emailVerified  DateTime?
+  image          String?
+  accounts       Account[]
+  sessions       Session[]
+  TimerEvents    TimerEvent[]
+  SavedEvents    SavedEvent[]
+  UserInvites    UserInvite[]
+  UserPreference UserPreference?
+  Notification   Notification[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model TimerEvent {
+  id             Int          @id @default(autoincrement())
+  timestamp      DateTime
+  timezoneId     Int          @default(0)
+  categoryId     Int          @default(0)
+  title          String       @default("My Event")
+  summary        String?
+  endingPhraseId Int          @default(0)
+  isPrivate      Boolean      @default(false)
+  relevantLink   String
+  User           User?        @relation(fields: [userId], references: [id])
+  userId         Int?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now())
+  SavedEvent     SavedEvent[]
+  UserInvite     UserInvite[]
+}
+
+model SavedEvent {
+  id           Int        @id @default(autoincrement())
+  timerEventId Int        @unique
+  TimerEvent   TimerEvent @relation(fields: [timerEventId], references: [id], onDelete: Cascade)
+  Users        User[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @default(now())
+}
+
+model UserInvite {
+  id           Int          @id @default(autoincrement())
+  timerEventId Int
+  TimerEvent   TimerEvent   @relation(fields: [timerEventId], references: [id], onDelete: Cascade)
+  userEmail    String
+  User         User         @relation(fields: [userEmail], references: [email], onDelete: Cascade)
+  status       InviteStatus @default(PENDING)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @default(now())
+
+  @@unique([timerEventId, userEmail])
+}
+
+model UserPreference {
+  id                Int      @id @default(autoincrement())
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            Int      @unique
+  isPrivate         Boolean  @default(true)
+  hideEmail         Boolean  @default(true)
+  saveCreatedEvent  Boolean  @default(true)
+  defaultTimezoneId Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now())
+}
+
+enum InviteStatus {
+  PENDING
+  DECLINED
+  ACCEPTED
+  REQUESTED
+  REJECTED
+  REJECTED_PERM
+}
+
+model Notification {
+  id          Int      @id @default(autoincrement())
+  recipient   User     @relation(fields: [recipientId], references: [id])
+  recipientId Int
+  message     String
+  createdAt   DateTime @default(now())
+}

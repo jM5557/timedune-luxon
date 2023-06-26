@@ -20,6 +20,7 @@
       }
     ],
     "paths": {
+      "@localprisma/*": ["./prisma/*"],
       "@/*": ["./src/*"]
     }
   },
