@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["clientExtensions"]
@@ -18,15 +15,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -46,12 +42,12 @@ model User {
   emailVerified  DateTime?
   image          String?
   accounts       Account[]
+  Notification   Notification[]
   sessions       Session[]
   TimerEvents    TimerEvent[]
-  SavedEvents    SavedEvent[]
   UserInvites    UserInvite[]
   UserPreference UserPreference?
-  Notification   Notification[]
+  SavedEvents    SavedEvent[]    @relation("SavedEventToUser")
 }
 
 model VerificationToken {
@@ -65,53 +61,61 @@ model VerificationToken {
 model TimerEvent {
   id             Int          @id @default(autoincrement())
   timestamp      DateTime
-  timezoneId     Int          @default(0)
+  timezone       String       @default("Etc/UTC")
   categoryId     Int          @default(0)
   title          String       @default("My Event")
   summary        String?
   endingPhraseId Int          @default(0)
   isPrivate      Boolean      @default(false)
   relevantLink   String
-  User           User?        @relation(fields: [userId], references: [id])
   userId         Int?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @default(now())
-  SavedEvent     SavedEvent[]
+  SavedEvent     SavedEvent?
+  User           User?        @relation(fields: [userId], references: [id])
   UserInvite     UserInvite[]
 }
 
 model SavedEvent {
   id           Int        @id @default(autoincrement())
   timerEventId Int        @unique
-  TimerEvent   TimerEvent @relation(fields: [timerEventId], references: [id], onDelete: Cascade)
-  Users        User[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @default(now())
+  TimerEvent   TimerEvent @relation(fields: [timerEventId], references: [id], onDelete: Cascade)
+  Users        User[]     @relation("SavedEventToUser")
 }
 
 model UserInvite {
   id           Int          @id @default(autoincrement())
   timerEventId Int
-  TimerEvent   TimerEvent   @relation(fields: [timerEventId], references: [id], onDelete: Cascade)
   userEmail    String
-  User         User         @relation(fields: [userEmail], references: [email], onDelete: Cascade)
   status       InviteStatus @default(PENDING)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @default(now())
+  TimerEvent   TimerEvent   @relation(fields: [timerEventId], references: [id], onDelete: Cascade)
+  User         User         @relation(fields: [userEmail], references: [email], onDelete: Cascade)
 
   @@unique([timerEventId, userEmail])
 }
 
 model UserPreference {
-  id                Int      @id @default(autoincrement())
-  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId            Int      @unique
-  isPrivate         Boolean  @default(true)
-  hideEmail         Boolean  @default(true)
-  saveCreatedEvent  Boolean  @default(true)
-  defaultTimezoneId Int?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @default(now())
+  id               Int      @id @default(autoincrement())
+  userId           Int      @unique
+  isPrivate        Boolean  @default(true)
+  hideEmail        Boolean  @default(true)
+  saveCreatedEvent Boolean  @default(true)
+  defaultTimezone  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now())
+  User             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id          Int      @id @default(autoincrement())
+  recipientId Int
+  message     String
+  createdAt   DateTime @default(now())
+  recipient   User     @relation(fields: [recipientId], references: [id])
 }
 
 enum InviteStatus {
@@ -121,12 +125,4 @@ enum InviteStatus {
   REQUESTED
   REJECTED
   REJECTED_PERM
-}
-
-model Notification {
-  id          Int      @id @default(autoincrement())
-  recipient   User     @relation(fields: [recipientId], references: [id])
-  recipientId Int
-  message     String
-  createdAt   DateTime @default(now())
 }

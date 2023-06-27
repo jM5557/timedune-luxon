@@ -2,7 +2,6 @@ import prisma from "@localprisma/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "../auth/[...nextauth]/route";
-import { time } from "console";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -24,22 +23,29 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const json = await request.json();
+    console.log(json);
     const session = await getServerSession(authOptions);
-    console.log(...json);
 
     const timerEvent = await prisma.timerEvent.create({
       data: {
-        ...json
+        ...json,
+        User: {
+          connect: {
+            email: session?.user?.email
+          }
+        }
       },
+      include: {
+        User: true
+      }
     });
-
-    console.log(timerEvent);
 
     return new NextResponse(JSON.stringify(timerEvent), { 
      status: 201, 
      headers: { "Content-Type": "application/json" },
     });
   } catch (error: any) {
+    console.log(error.message);
     if (error.code === "P2002") {
       return new NextResponse("TimerEvent could not be added", {
         status: 409,

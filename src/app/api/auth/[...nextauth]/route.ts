@@ -20,14 +20,14 @@ export const authOptions: NextAuthOptions = {
             userId: Number(user.id)
           },
           select: {
-            defaultTimezoneId: true
+            defaultTimezone: true
           }
         });
 
         if (!result) {
           await prisma.userPreference.create({
             data: {
-              defaultTimezoneId: 0,
+              defaultTimezone: "Etc/UTC",
               User: {
                 connect: {
                   id: Number(user.id)

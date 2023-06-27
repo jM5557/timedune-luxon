@@ -10,20 +10,28 @@ type SiteHeaderProps = {
 const SiteHeader = ({ isSignedIn = false }: SiteHeaderProps): JSX.Element => {
     return (
         <header
-            className="flex space-between"
+            className="flex justify-between"
         >
-            <Link href = "/">
+            <Link href = "/" className="logo">
                 TimeDune
             </Link>
 
             { (isSignedIn) ?
-                <button
-                    type = "button"
-                    onClick = { () => signOut() }
-                >
-                    Sign Out
-                </button> :
-                <button
+                <div className="flex justify-center">
+                    <Link href = "/create"
+                        className="px-4 py-4 block"
+                    >
+                        Create
+                    </Link>
+                    <button
+                        type = "button"
+                        onClick = { () => signOut() }
+                        className="px-4 py-4 block"
+                    >
+                        Sign Out
+                    </button> 
+                </div>
+                : <button
                     type = "button"
                     onClick = { () => signIn() }
                 >

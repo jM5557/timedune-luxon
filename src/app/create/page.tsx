@@ -1,12 +1,12 @@
 "use client";
 
+import DateTimeForm from "@/components/DateTimeForm";
 import React, { useState } from "react";
-import { TimerEvent } from "@prisma/client";
 
 const CreatePage = (): JSX.Element => {
       const [formValues, setFormValues] = useState({
         timestamp: '',
-        timezoneId: 0,
+        timezone: "Etc/UTC",
         categoryId: 0,
         title: 'My Event',
         summary: '',
@@ -34,7 +34,10 @@ const CreatePage = (): JSX.Element => {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify(formValues),
+            body: JSON.stringify({
+              ...formValues,
+              timestamp: new Date(formValues.timestamp)
+            }),
           });
     
           if (!response.ok) {
@@ -47,7 +50,7 @@ const CreatePage = (): JSX.Element => {
           // Reset the form after successful submission
           setFormValues({
             timestamp: '',
-            timezoneId: 0,
+            timezone: "Etc/UTC",
             categoryId: 0,
             title: 'My Event',
             summary: '',
@@ -64,22 +67,24 @@ const CreatePage = (): JSX.Element => {
         <form onSubmit={handleSubmit}>
           <div>
             <label htmlFor="timestamp">Timestamp:</label>
-            <input
-              type="datetime-local"
-              id="timestamp"
-              name="timestamp"
-              value={formValues.timestamp}
-              onChange={handleChange}
-              required
+
+            <DateTimeForm
+              initialTimestamp={formValues.timestamp}
+              onTimestampChange={(timestamp: string) => {
+                setFormValues({
+                  ...formValues,
+                  timestamp
+                })
+              }}
             />
           </div>
           <div>
-            <label htmlFor="timezoneId">Timezone ID:</label>
+            <label htmlFor="timezone">Timezone:</label>
             <input
               type="number"
-              id="timezoneId"
-              name="timezoneId"
-              value={formValues.timezoneId}
+              id="timezone"
+              name="timezone"
+              value={formValues.timezone}
               onChange={handleChange}
               required
             />

@@ -78,19 +78,27 @@ export const toISO8601UTC = (
 ) => {
     const datetime = parseDateTimeFormats(dateInput, timezoneInput);
   
-      if (datetime) {
-        const utcTimestamp = datetime.toUTC().toISO({ suppressMilliseconds: true });
-        setUtcTimestamp(utcTimestamp);
-      } else {
-        setUtcTimestamp(null);
-      }
+    if (datetime) {
+      const utcTimestamp = datetime.toUTC().toISO({ suppressMilliseconds: true });
+      setUtcTimestamp(utcTimestamp);
+    } else {
+      setUtcTimestamp(null);
+    }
 }
 
-export const parseDateTimeFormats = (dateTimeString: string, timezoneInput: string): DateTime | null => {
+export const parseDateTimeFormats = (
+  dateTimeString: string, 
+  timezoneInput: string
+): DateTime | null => {
     if (!dateTimeString) return null;
   
     for (const format of formats) {
-      const parsedDateTime = DateTime.fromFormat(dateTimeString, format, { zone: timezoneInput });
+      const parsedDateTime = DateTime.fromFormat(
+        dateTimeString, 
+        format, 
+        { zone: timezoneInput }
+      );
+
       if (parsedDateTime.isValid) {
         return parsedDateTime;
       }
